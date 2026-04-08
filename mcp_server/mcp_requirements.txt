@@ -1,0 +1,12 @@
+# MCP Server dependencies
+mcp>=0.9.0
+
+# Already in requirements.txt, but listed here for reference:
+# torch
+# diffusers
+# transformers
+# controlnet_aux
+# ultralytics
+# Pillow
+# numpy
+# opencv-python

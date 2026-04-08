@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+data/outputs/colored/
+data/outputs/denoise_comparison/
+data/outputs/lineart_side_by_side/
+data/outputs/nlmeans_detail_comparison/
+data/outputs/quick_denoise_test/
+data/outputs/side_by_side_comparison/
+data/outputs/nlmeans_comparison/
+docs/
+
+# Models and cache
+data/models/
+*.pth
+*.pt
+*.safetensors
+*.ckpt
+*.bin
+
+# Data directories (keep structure, ignore large files)
+data/outputs/colored/*
+data/outputs/debug/*
+!data/outputs/.gitkeep
+!data/inputs/.gitkeep
+!data/loras/.gitkeep
+!data/refs/.gitkeep
+!data/models/.gitkeep
+
+# MCP Server logs
+mcp_server.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Exceptions (keep example images)
+!examples/**/*.png
+!examples/**/*.jpg

@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "chromamanga": {
+      "command": "python",
+      "args": [
+        "E:/code/graduationProject/ChromaManga/chromamanga_mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "E:/code/graduationProject/ChromaManga",
+        "CUDA_VISIBLE_DEVICES": "0"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "get_task_status",
+        "get_config",
+        "analyze_image"
+      ]
+    }
+  }
+}

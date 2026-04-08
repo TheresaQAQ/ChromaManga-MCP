@@ -1,0 +1,4 @@
+"""
+ChromaManga Tests
+测试模块
+"""
