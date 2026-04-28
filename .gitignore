@@ -39,6 +39,13 @@ data/outputs/debug/*
 # MCP Server logs
 mcp_server.log
 
+# Agent secrets
+.env.agent
+.env
+
+# Upload artifacts
+data/inputs/upload_*
+
 # IDE
 .vscode/
 .idea/

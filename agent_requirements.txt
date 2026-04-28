@@ -1,0 +1,13 @@
+# ChromaManga Agent 依赖（在 requirements.txt + mcp_server/mcp_requirements.txt 基础之上）
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.7
+python-dotenv>=1.0.0
+
+# LangGraph + OpenAI-compatible LLM
+langgraph>=0.2.40
+langchain-openai>=0.2.0
+langchain-core>=0.3.0
+
+# MCP ↔ LangChain 桥接（自动把 MCP 工具转成 LangChain Tool）
+langchain-mcp-adapters>=0.1.0

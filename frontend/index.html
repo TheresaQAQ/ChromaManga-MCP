@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChromaManga · AI 漫画上色 Agent</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3C/svg%3E">
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.0/marked.min.js"></script>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r="0.5" fill="white"/>
+            <circle cx="17.5" cy="10.5" r="0.5" fill="white"/>
+            <circle cx="8.5" cy="7.5" r="0.5" fill="white"/>
+            <circle cx="6.5" cy="12.5" r="0.5" fill="white"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5-4.5-9-10-9z"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>
+            ChromaManga
+            <span class="mode-badge" id="mode-badge" hidden></span>
+          </h1>
+          <span class="subtitle">AI 漫画上色 · LangGraph Agent</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="progress" id="progress" hidden>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span class="progress-text" id="progress-text">0 / 7</span>
+        </div>
+        <div class="status" id="status">
+          <span class="status-dot"></span>
+          <span class="status-text">连接中...</span>
+        </div>
+        <button class="btn-ghost" id="btn-llm" title="大模型配置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <line x1="9" y1="2" x2="9" y2="4"/>
+            <line x1="15" y1="2" x2="15" y2="4"/>
+            <line x1="9" y1="20" x2="9" y2="22"/>
+            <line x1="15" y1="20" x2="15" y2="22"/>
+            <line x1="20" y1="9" x2="22" y2="9"/>
+            <line x1="20" y1="14" x2="22" y2="14"/>
+            <line x1="2" y1="9" x2="4" y2="9"/>
+            <line x1="2" y1="14" x2="4" y2="14"/>
+          </svg>
+        </button>
+        <button class="btn-ghost" id="btn-drawer" title="参数调节">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"/>
+            <line x1="4" y1="10" x2="4" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12" y2="3"/>
+            <line x1="20" y1="21" x2="20" y2="16"/>
+            <line x1="20" y1="12" x2="20" y2="3"/>
+            <line x1="1" y1="14" x2="7" y2="14"/>
+            <line x1="9" y1="8" x2="15" y2="8"/>
+            <line x1="17" y1="16" x2="23" y2="16"/>
+          </svg>
+        </button>
+        <button class="btn-ghost" id="btn-clear" title="清空对话">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="chat" id="chat">
+      <div class="welcome" id="welcome">
+        <div class="welcome-orb"></div>
+        <h2>给你的漫画注入色彩</h2>
+        <p>上传黑白漫画页面，说一句「帮我上色」即可。我会自动检测角色、提取线稿、执行 SDXL 推理并还原对话框文字。</p>
+        <div class="suggestions">
+          <button class="chip chip-primary" data-action="example" title="一键用仓库自带的示例漫画跑一次完整上色">✨ 用示例图体验</button>
+          <button class="chip" data-prompt="帮我上色">🎨 帮我上色</button>
+          <button class="chip" data-prompt="查看当前配置">⚙️ 查看配置</button>
+          <button class="chip" data-prompt="颜色太淡了，调鲜艳一点然后重新生成">🌈 调鲜艳重跑</button>
+          <button class="chip" data-prompt="把 Sagiri 的头发改成粉色">💇 改角色颜色</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="input-bar">
+      <div class="upload-preview" id="upload-preview" hidden>
+        <img id="preview-img" alt="预览">
+        <div class="upload-info">
+          <span>图片已准备</span>
+          <span class="upload-path" id="upload-path"></span>
+        </div>
+        <button class="btn-close" id="clear-upload" title="移除图片">×</button>
+      </div>
+
+      <div class="input-row">
+        <button class="btn-icon" id="btn-upload" title="上传图片（也可直接拖放或粘贴）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <input type="file" id="file-input" accept="image/*" hidden>
+        <textarea id="input" placeholder="和 ChromaManga Agent 说点什么... (Shift+Enter 换行)" rows="1"></textarea>
+        <button class="btn-send" id="btn-send" disabled title="发送 (Enter)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">
+        <span>拖放图片 / Ctrl+V 粘贴 / 点 📎 上传</span>
+        <span id="connection-hint">· WebSocket 流式</span>
+      </div>
+    </footer>
+  </div>
+
+  <div class="dropzone" id="dropzone" hidden>
+    <div class="dropzone-inner">
+      <div class="dropzone-icon">⤓</div>
+      <h3>拖放图片以上传</h3>
+      <p>支持 PNG / JPG / WEBP</p>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <img id="lightbox-img" alt="">
+    <div class="lightbox-hint">点击任意处或按 Esc 关闭</div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <!-- ─── LLM 配置抽屉 ─── -->
+  <aside class="param-drawer llm-drawer" id="llm-drawer" hidden>
+    <header class="drawer-head">
+      <div>
+        <h3>大模型配置</h3>
+        <span>切换 LLM 服务商，应用后立即生效</span>
+      </div>
+      <button class="btn-close" id="llm-drawer-close" title="关闭">×</button>
+    </header>
+
+    <div class="drawer-body">
+      <div class="provider-tabs">
+        <button class="provider-tab active" data-provider="dashscope">
+          <span class="provider-icon">☁️</span>
+          <span>阿里百炼</span>
+        </button>
+        <button class="provider-tab" data-provider="deepseek">
+          <span class="provider-icon">🌊</span>
+          <span>DeepSeek</span>
+        </button>
+        <button class="provider-tab" data-provider="custom">
+          <span class="provider-icon">🛠️</span>
+          <span>自定义</span>
+        </button>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>Base URL</span>
+        </div>
+        <input class="param-input" id="llm-base-url" type="text" placeholder="https://...">
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>Model</span>
+        </div>
+        <input class="param-input" id="llm-model" type="text" list="llm-model-list" placeholder="模型 ID">
+        <datalist id="llm-model-list"></datalist>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>API Key</span>
+        </div>
+        <input class="param-input" id="llm-api-key" type="password" placeholder="sk-... （留空表示沿用当前 key）">
+        <p class="param-hint" id="llm-key-hint">从服务商控制台获取 API Key</p>
+      </div>
+
+      <div class="param-group" hidden>
+        <label class="check-row">
+          <input type="checkbox" id="llm-persist" checked>
+          <span>同时写入 <code>.env.agent</code>（持久化，下次启动仍生效）</span>
+        </label>
+      </div>
+
+      <div class="llm-current">
+        <span class="llm-current-label">当前配置</span>
+        <div class="llm-current-info" id="llm-current-info">加载中...</div>
+      </div>
+    </div>
+
+    <footer class="drawer-foot">
+      <div class="drawer-status" id="llm-status"></div>
+      <button class="btn-apply" id="btn-llm-apply">应用配置</button>
+    </footer>
+  </aside>
+
+  <aside class="param-drawer" id="param-drawer" hidden>
+    <header class="drawer-head">
+      <div>
+        <h3>推理参数</h3>
+        <span>滑动调节 · 应用后 Agent 会自动回退并重跑</span>
+      </div>
+      <button class="btn-close" id="drawer-close" title="关闭">×</button>
+    </header>
+
+    <div class="drawer-body">
+      <div class="param-group">
+        <div class="param-label">
+          <span>guidance_scale</span>
+          <span class="param-value" id="pv-guidance">6.0</span>
+        </div>
+        <input class="param-slider" id="ps-guidance" type="range" min="1" max="15" step="0.5" value="6">
+        <p class="param-hint">提示词遵循度。颜色太淡 → 调高（7-8）；过饱和 → 调低（4-5）</p>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>num_inference_steps</span>
+          <span class="param-value" id="pv-steps">20</span>
+        </div>
+        <input class="param-slider" id="ps-steps" type="range" min="10" max="40" step="1" value="20">
+        <p class="param-hint">推理步数。细节不够 → 调高（25-30）；推理慢 → 调低（15-18）</p>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>controlnet_scale</span>
+          <span class="param-value" id="pv-controlnet">1.1</span>
+        </div>
+        <input class="param-slider" id="ps-controlnet" type="range" min="0" max="2" step="0.05" value="1.1">
+        <p class="param-hint">线稿控制强度。线稿不清 → 调高（1.2-1.4）；太死板 → 调低（0.8-0.95）</p>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">
+          <span>seed</span>
+          <span class="param-value" id="pv-seed">42</span>
+        </div>
+        <div class="seed-row">
+          <input class="param-input" id="ps-seed" type="number" min="-1" max="2147483647" value="42">
+          <button class="btn-mini" id="btn-random-seed" title="随机种子">🎲</button>
+        </div>
+        <p class="param-hint">随机种子。想换风格但保持提示词时改它；-1 表示每次随机</p>
+      </div>
+
+      <div class="param-presets">
+        <div class="preset-label">快捷预设</div>
+        <div class="preset-btns">
+          <button class="preset-btn" data-preset="vivid">🌈 鲜艳</button>
+          <button class="preset-btn" data-preset="soft">🌸 柔和</button>
+          <button class="preset-btn" data-preset="detailed">✨ 精细</button>
+          <button class="preset-btn" data-preset="default">↺ 默认</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="drawer-foot">
+      <div class="drawer-status" id="drawer-status"></div>
+      <button class="btn-apply" id="btn-apply" disabled>应用并重跑</button>
+    </footer>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>
